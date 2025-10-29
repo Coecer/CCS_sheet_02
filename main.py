@@ -23,7 +23,7 @@ def plot_traj(cfg, all_trajs, first_walkers=5):
     t = np.arange(cfg.N)
     for i in range(first_walkers):
         plt.plot(t, all_trajs[i], label=f'walker {i}')
-    plt.xlabel(r'number of step $n$')
+    plt.xlabel(r'step number $n$')
     plt.ylabel(r'position $X_n$')
     plt.legend()
 
@@ -45,9 +45,8 @@ def main():
     # plt.show()
     plt.clf()   # clear figure for next plot
 
-    # part b)<
+    # part 1b)
     n_plus, n_minus = np.zeros(10), np.zeros(10)
-    X_mean = 0
 
     for i in range(10):
         n_plus[i] = (steps_arrays[i] == 1).sum()
@@ -60,8 +59,16 @@ def main():
     print(f'n_plus = {n_plus}; n_minus = {n_minus}')
     print(f'X_n_arr = {X_n_arr}')
     print(f'<X> = {X_mean:.1f}')
-    print(f'Var(X_n) = {X_var:.1f}')
+    print(f'Var(X_n) = {X_var:.1f}\n\n')
     
+
+    # part 1c)
+    X_M5000_arr = [x_trajectories[i][-1] for i in range(cfg_part_a.M)] 
+    X_M5000_var_of_mean = np.var(X_M5000_arr) / cfg_part_a.M
+    X_M5000_std_of_mean = np.sqrt(X_M5000_var_of_mean)
+
+    print(f'Var(X_M5000) = {X_M5000_var_of_mean:.1f}')
+    print(f'Std(X_M5000) = {X_M5000_std_of_mean:.1f}')
 
 
 if __name__ == '__main__':
