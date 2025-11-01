@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import random
 from settings import settings
 
+import logging                  # package for writing log file
+from utilities import utils     # used to define
+
+
 
 def generate_walker(cfg):
     x_traj = np.zeros(cfg.N)
@@ -27,8 +31,25 @@ def plot_traj(cfg, all_trajs, first_walkers=5):
     plt.ylabel(r'position $X_n$')
     plt.legend()
 
+def do_histogram(X_n_arr):
+    logging.info(f"Plotting histogram with bin size of {int(np.sqrt(len(X_n_arr)))}")
+    histogram = plt.hist(X_n_arr, bins=int(35), density=True, color='skyblue', edgecolor='black')
+    # plt.title("Histogram for X_n with n=N=1000")
+    plt.xlabel(r'$X_N$')
+    plt.ylabel(r'probability $p(X_N)$')
+    # plt.legend()
+    # plt.show()
+    return histogram
+
+
 
 def main():
+    # init stuff
+    out_dir = utils.create_output_directory()
+    utils.setup_logging(out_dir)
+    # utils.setup_logging(f'Created output directory: {out_dir}')
+    plots_dir = utils.create_plots_directory()
+
     # part 1)a)
     # default instance is the configuration of the variable settings of exercise 1a)
     cfg_part_a = settings.Config()
@@ -41,11 +62,13 @@ def main():
     for i in range(cfg_part_a.M):
         x_trajectories[i], steps_arrays[i] = generate_walker(cfg_part_a)
     plot_traj(cfg_part_a, x_trajectories, first_walkers=10)
-    plt.savefig(cfg_part_a.out_dir / f"part_1a.pdf")
+    plt.savefig(plots_dir / f"part_1a.pdf")
     # plt.show()
     plt.clf()   # clear figure for next plot
 
+
     # part 1b)
+    logging.info("\n\nPart 1b)\n")
     n_plus, n_minus = np.zeros(10), np.zeros(10)
 
     for i in range(10):
@@ -56,19 +79,31 @@ def main():
     X_mean = np.mean(X_n_arr)
     X_var = np.var(X_n_arr)
 
-    print(f'n_plus = {n_plus}; n_minus = {n_minus}')
-    print(f'X_n_arr = {X_n_arr}')
-    print(f'<X> = {X_mean:.1f}')
-    print(f'Var(X_n) = {X_var:.1f}\n\n')
+    logging.info(f'n_plus = {n_plus}; n_minus = {n_minus}')
+    logging.info(f'X_n_arr = {X_n_arr}')
+    logging.info(f'<X> = {X_mean:.1f}')
+    logging.info(f'Var(X_n) = {X_var:.1f}\n\n')
     
 
     # part 1c)
+    logging.info("\n\nPart 1c)\n")
     X_M5000_arr = [x_trajectories[i][-1] for i in range(cfg_part_a.M)] 
     X_M5000_var_of_mean = np.var(X_M5000_arr) / cfg_part_a.M
     X_M5000_std_of_mean = np.sqrt(X_M5000_var_of_mean)
 
-    print(f'Var(X_M5000) = {X_M5000_var_of_mean:.1f}')
-    print(f'Std(X_M5000) = {X_M5000_std_of_mean:.1f}')
+    logging.info(f'Var(X_M5000) = {X_M5000_var_of_mean:.1f}')
+    logging.info(f'Std(X_M5000) = {X_M5000_std_of_mean:.1f}')
+
+    # part 1d)
+    logging.info("\n\nPart 1d)\n")
+    do_histogram(X_M5000_arr)
+    plt.savefig(plots_dir / f"part_1d.pdf")
+    
+
+
+
+
+
 
 
 if __name__ == '__main__':
