@@ -4,7 +4,7 @@ from pathlib import Path
 
 def create_plots_directory():
     """
-    Create a plots directory if it does not already exist.
+    Create a plots directory if it does not already exist and returns it.
     """
     # Define the root output directory
     HERE = Path(__file__).resolve().parent.parent
@@ -38,7 +38,7 @@ def create_output_directory():
     OUTDIR = ROOT_OUT / f"run_{run_idx}"
     OUTDIR.mkdir()
     
-    print(f"[INFO] Writing all files to {OUTDIR.relative_to(HERE)}/")
+    print(f"[INFO] Writing all files to {OUTDIR.relative_to(HERE)}")
     return OUTDIR
 
 def setup_logging(OUTDIR):

@@ -32,14 +32,17 @@ def plot_traj(cfg, all_trajs, first_walkers=5):
     plt.legend()
 
 def do_histogram(X_n_arr):
-    logging.info(f"Plotting histogram with bin size of {int(np.sqrt(len(X_n_arr)))}")
-    histogram = plt.hist(X_n_arr, bins=int(35), density=True, color='skyblue', edgecolor='black')
-    # plt.title("Histogram for X_n with n=N=1000")
+    numb_of_bins = int(np.sqrt(len(X_n_arr)))
+    numb_of_bins = int(45)
+    logging.info(f"Plotting histogram with bin size of {numb_of_bins}")
+    histogram = plt.hist(X_n_arr, bins=numb_of_bins, density=True, color='skyblue', edgecolor='black')
     plt.xlabel(r'$X_N$')
     plt.ylabel(r'probability $p(X_N)$')
-    # plt.legend()
-    # plt.show()
+
     return histogram
+
+def gauss(x_arr, mu, var):
+    return 1/np.sqrt(2*np.pi*var) * np.exp(- (x_arr - mu)**2/ (2*var))
 
 
 
@@ -50,9 +53,12 @@ def main():
     # utils.setup_logging(f'Created output directory: {out_dir}')
     plots_dir = utils.create_plots_directory()
 
+    # configuration
+    cfg_part_a = settings.Config()
+
     # part 1)a)
     # default instance is the configuration of the variable settings of exercise 1a)
-    cfg_part_a = settings.Config()
+
     # bc we used @dataclass we can now redefine easily for example q and p like this:
     # cfg_part_a = settings.Config(q=0.1, p=0.9)
 
@@ -97,14 +103,17 @@ def main():
     # part 1d)
     logging.info("\n\nPart 1d)\n")
     do_histogram(X_M5000_arr)
-    plt.savefig(plots_dir / f"part_1d.pdf")
     
+    Mean_theo =  cfg_part_a.N * (cfg_part_a.p * 1 - cfg_part_a.q )
+    Var_theo = cfg_part_a.N * (4*cfg_part_a.p * cfg_part_a.q)         # 
+    logging.info(f"True theoretiacal mean is: mu = E[X_n]= {Mean_theo:.2f}")
+    logging.info(f"True theoretiacal variance is: var = {Var_theo:.2f}\n")
 
-
-
-
-
-
+    X_arr_hist = np.arange(-3*np.sqrt(Var_theo) + Mean_theo, +3*np.sqrt(Var_theo) + Mean_theo)
+    plt.plot(X_arr_hist, gauss(X_arr_hist, Mean_theo, Var_theo), color="orange", label="Theoretical Gaussian")
+    
+    plt.legend()
+    plt.savefig(plots_dir / f"part_1d.pdf")
 
 if __name__ == '__main__':
     main()
