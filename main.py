@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+from math import factorial
+from scipy.stats import poisson
 from settings import settings
 
 import logging                  # package for writing log file
@@ -32,12 +34,16 @@ def plot_traj(cfg, all_trajs, first_walkers=5):
     plt.legend()
 
 def do_histogram(X_n_arr):
-    numb_of_bins = int(np.sqrt(len(X_n_arr)))
-    numb_of_bins = int(45)
-    logging.info(f"Plotting histogram with bin size of {numb_of_bins}")
-    histogram = plt.hist(X_n_arr, bins=numb_of_bins, density=True, color='skyblue', edgecolor='black')
-    plt.xlabel(r'$X_N$')
-    plt.ylabel(r'probability $p(X_N)$')
+    # numb_of_bins = int(np.sqrt(len(X_n_arr)))
+    # numb_of_bins = int(45)
+    min_val = int(np.min(X_n_arr)) - 1
+    max_val = int(np.max(X_n_arr)) + 3    
+    bins = np.arange(min_val, max_val, 2) 
+
+    logging.info(f"Plotting histogram with bins of {len(bins)}")
+    histogram = plt.hist(X_n_arr, bins=bins, density=True, color='skyblue', edgecolor='black')
+    plt.xlabel(r'$X_n$')
+    plt.ylabel(r'probability density $f(X_n)$')
 
     return histogram
 
@@ -102,7 +108,7 @@ def main():
 
     # part 1d)
     logging.info("\n\nPart 1d)\n")
-    do_histogram(X_M5000_arr)
+    hist_d = do_histogram(X_M5000_arr)
     
     Mean_theo =  cfg_part_a.N * (cfg_part_a.p * 1 - cfg_part_a.q )
     Var_theo = cfg_part_a.N * (4*cfg_part_a.p * cfg_part_a.q)         # 
@@ -114,6 +120,80 @@ def main():
     
     plt.legend()
     plt.savefig(plots_dir / f"part_1d.pdf")
+    plt.clf()   # clear figure for next plot
+
+
+    # part 1e)
+    logging.info("\n\nPart 1e)\n")
+
+    # p_list = [1/3, 0.1, 0.01, 0.001, 1e-4, 1e-5, 1e-6]
+
+    
+    cfg_part_e = settings.Config(p=0.005)
+    x_trajectories = np.zeros((cfg_part_e.M, cfg_part_e.N))
+
+
+    for i in range(cfg_part_e.M):
+        x_trajectories[i], steps_arrays[i] = generate_walker(cfg_part_e)
+
+    X_M5000_arr = [x_trajectories[i][-1] for i in range(cfg_part_e.M)] 
+
+    
+    # theoretische Poisson-Parameter
+    lambda_theo = cfg_part_e.N * cfg_part_e.q
+    logging.info(f"Theoretisches Lambda (für n_L): {lambda_theo:.2f}") # Sollte 10.0 sein
+
+    # Wichtig: Wir brauchen normalisierte Wahrscheinlichkeiten (nicht Dichte), 
+    # um sie mit der PMF (probability mass function) zu vergleichen.
+    # Bins zentriert um ... 978, 980, 982 ..., da X_N nur jeden zweiten Wert annimmt.
+    min_val = int(np.min(X_M5000_arr)) - 1
+    max_val = int(np.max(X_M5000_arr)) + 3
+    
+    bins = np.arange(min_val, max_val, 2) 
+
+    # do_histogram(X_M5000_arr) # Ersetze dies durch einen expliziten Plot
+    plt.hist(X_M5000_arr, 
+            bins=bins, 
+            density=False,  # Zeige Wahrscheinlichkeiten, nicht Dichte
+            weights=np.ones_like(X_M5000_arr) / len(X_M5000_arr), # Normalisieren
+            label="Simulation $P(X_N)$",
+            align='left', # Balken links vom Bin-Rand
+            rwidth=0.8,
+            color='skyblue',
+            edgecolor='black')
+
+    # 3. Berechne und plotte die theoretische Poisson-Verteilung
+    # Wir nehmen die X-Werte, die unsere Bins definieren
+    X_N_values = bins[:-1] # X_N = 970, 972, 974, ...
+
+    # Wandle diese X_N-Positionen in Anzahlen n_L (k) um
+    # k muss ein Integer sein
+    k_values = (cfg_part_e.N - X_N_values) / 2
+    k_values = k_values.astype(int)
+
+    # Berechne die Poisson-Wahrscheinlichkeit P(n_L = k) für jedes k
+    P_theo = poisson.pmf(k_values, mu=lambda_theo)
+
+    # Plotte P(n_L) an der Position X_N = N - 2*k
+    plt.plot(X_N_values, P_theo, 'o', color="red", label=f"Theorie (Poisson, $\lambda={lambda_theo:.0f}$)")
+
+    plt.xlabel("$X_N$")
+    plt.ylabel("Wahrscheinlichkeit $P(X_N)$")
+    plt.legend()
+    plt.title(f"Verteilung für $p={cfg_part_e.p}$, $N={cfg_part_e.N}$")
+    plt.show()
+
+    # plt.savefig(plots_dir / f"part_1e.pdf")
+
+    # for p in p_list:
+    #     cfg_part_e = settings.Config(p=p)
+
+    #     for i in range(cfg_part_a.M):
+    #         x_trajectories[i], steps_arrays[i] = generate_walker(cfg_part_e)
+            
+    #         X_M5000_arr = [x_trajectories[i][-1] for i in range(cfg_part_a.M)] 
+
+
 
 if __name__ == '__main__':
     main()
